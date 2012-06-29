@@ -29,6 +29,7 @@ Gem::Specification.new do |s|
     "features/galois.feature",
     "features/step_definitions/galois_steps.rb",
     "features/support/env.rb",
+    "galois.gemspec",
     "lib/galois.rb",
     "lib/galois_server.rb",
     "lib/rack_monkey.rb",
