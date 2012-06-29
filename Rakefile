@@ -17,8 +17,8 @@ Jeweler::Tasks.new do |gem|
   gem.name = "galois"
   gem.homepage = "http://github.com/Veered/galois"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{A simple REST service for interacting with Icinga.}
+  gem.description = %Q{A simple REST service for interacting with Icinga.}
   gem.email = "lucas@likeness.com"
   gem.authors = ["Veered"]
   # dependencies defined in Gemfile
