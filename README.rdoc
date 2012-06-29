@@ -1,6 +1,6 @@
 = galois
 
-Description goes here.
+A simple REST service for interacting with Icinga.
 
 == Contributing to galois
  
