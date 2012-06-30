@@ -4,4 +4,6 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'galois_server'
 
-GaloisServer.start({:Port  => 8123})
+`redis-server`
+
+GaloisServer.start({:Host => "192.168.147.10", :Port  => 8124})

@@ -1,12 +1,24 @@
 require 'rack'
 require 'rack_monkey'
 require 'sinatra/base'
+require 'redis'
 
 module GaloisServer
   class HTTPConnection < Sinatra::Base
-    get '/' do
-      "Rock On!"
+    
+    get '/hosts' do
+      Redis.current.smembers("galois:hosts")
     end
+    
+    get '/increment' do
+      Redis.current.set("counter", Redis.current.get("counter").to_i + 1)
+      Redis.current.get("counter")
+    end
+    
+    get '/print' do
+      Redis.current.get("counter")
+    end
+    
   end
 end
 
@@ -22,4 +34,5 @@ module GaloisServer
     
     Rack::Handler::Unicorn.run(@app, options)
   end
+  
 end
