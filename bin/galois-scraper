@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
+
+require 'logger'
+require 'galois'
+
+`redis-server`
+GaloisScraper.new({
+      :icinga_config  => "/galois/icinga.cfg", 
+      :prd  => "/galois/production-machines",
+      :refresh  => 10, 
+      :host_fields => ["host_name", "notifications_enabled"],
+      :service_fields  => ["host_name","service_description","notifications_enabled"]
+}, Logger.new(STDOUT)).start
+

@@ -1,67 +1,69 @@
 require 'redis'
 require 'redis-namespace'
 require 'eventmachine'
-require 'ruby-debug'
+require 'json'
+require 'logger'
+require 'pry'
 
-class Scraper
-  attr_accessor :redis, :config, :icinga_status
+class GaloisScraper
+  attr_accessor :config, :logger, :redis, :icinga_status, :prd
   
-  def initialize(config)
-    @config = config
+  def initialize(config, logger = Logger.new(nil))
+    @config = {
+        :host_fields  => [],
+        :service_fields  => []
+      }.merge config
     
-    # Initialize redis
+    @logger = logger
+    
     @redis = {
       :fd => Redis.current,
       :ns => Redis::Namespace.new(:galois, :redis => Redis.current)
     }
-  
-    # Locate status.dat
-    File.open(@config[:icinga_config]).each do |line|
-      if line.match(/status_file=(.*)/)
-        @icinga_status = $1
-      end
-    end.close
-
+    
+    File.open(@config[:icinga_config]).each{ |line| @icinga_status = $1 if line.match(/status_file=(.*)/) }.close
+    File.open(@config[:prd]) {|file| @prd = JSON.parse(file.read)}
+    
+  rescue
+    @logger.error("Had some trouble with initialization:\n#{$!}")
   end
   
   def start
-    EM.run {
-      EM.add_periodic_timer(@config[:refresh]) {parse}
-    }
+    EM.run { EM.add_periodic_timer(@config[:refresh]) {parse} }
   end
   
   def parse
-    status_string = File.open(@icinga_status) {|file| file.read}
+    status = File.open(@icinga_status) {|file| file.read}
     
-    status_string.scan(/servicestatus {(.*?)}/m).flatten.each do |service|
-      # Parse host_name
-      host_name = service.match(/host_name=(.*)/) {$1}
-      # next unless `knife node show #{host_name} -a chef_environment` =~ /chef_environment: stg/
-      @redis[:ns].sadd("hosts", host_name)
-      @redis[:ns].expire("hosts", @config[:refresh])
+    @redis[:ns].del("entities")
+    parse_entity(status, "hoststatus", @config[:host_fields], &method(:add_prd))
+    parse_entity(status, "servicestatus", @config[:service_fields], &method(:add_prd))
     
-      # Parse service_name
-      service_name = service.match(/service_description=(.*)/) {$1}
-      @redis[:ns].sadd("#{host_name}#services", service_name)
-      @redis[:ns].expire("#{host_name}#services", @config[:refresh])
-    
-      # Parse @config[:fields]
-      @config[:fields].each do |field|
-        if service.match(/#{field}=(.*)/)
-          @redis[:ns].hmset("#{host_name}::#{service_name}", field, $1)
-          @redis[:ns].expire("#{host_name}::#{service_name}", @config[:refresh])
-        end
-      end
-      
-    end
-      
+  rescue
+    @logger.error("There were some issues with parsing and persisting the status data:\n#{$!}\n#{$@}")
   end
   
-end
-
-if __FILE__ == $0
-  config = {:icinga_config  => "/galois/icinga.cfg", 
-            :refresh  => 10, 
-            :fields  => ["current_state"]}
-  Scraper.new(config).start
+  def parse_entity(source, entity_name, fields)    
+    source.scan(/#{entity_name} {(.*?)}/m).flatten.each do |entity|
+      index = @redis[:ns].hincrby("entities", "#{entity_name}", 1) - 1
+      key = "#{entity_name}::#{index}"
+          
+      @redis[:ns].del(key)
+      fields.each { |field| if value = parse_field(entity, field) then @redis[:ns].hmset(key, field, value) end }
+      
+      yield key if block_given?
+    end
+  end
+  
+  def parse_field(entity, field)
+    field_name = entity.match(/#{field}=(.*)/) {$1}
+    
+  ensure
+    @logger.warn("Found no field named #{field} in entity:\n#{entity}") if field_name.nil?
+  end
+  
+  def add_prd(key)
+    @redis[:ns].hset(key, "isPrd?", @prd.include?(@redis[:ns].hget(key, "host_name")))
+  end
+  
 end
