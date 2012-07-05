@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
+
+require 'galois'
+require 'logger'
+
+smtp_settings = {
+  :address  => "smtp.gmail.com",
+  :port  => 587,
+  :domain  => "gmail.com",
+  :user_name  => "galois.emailer@gmail.com",
+  :password  => "nessness",
+  :authentication  => "plain",
+  :enable_starttls_auto  => true
+}
+
+GaloisEmailer.new({
+  :smtp_settings  => smtp_settings, 
+  :time  => Time.now+5, 
+  :server  => "http://192.168.147.10:8124",
+  :subscribers  => ["lucashansen@gmail.com"] # ["ops-team@likeness.com"]
+  }, Logger.new(STDOUT)).start

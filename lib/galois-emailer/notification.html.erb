@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+  </head>
+  <body>
+		<p> This email is a reminder about which production machines have Icinga notifications disabled. If you disabled notifications for
+        debugging purposes, and you see it on this list, it is a good idea to reactivate notifications as soon as you can.</p>
+
+		<% unless @hosts.empty?%>
+			<p>The following hosts have notifications disabled:</p>
+			<ul>
+			<% @hosts.each do |host|%>
+				<li><%= host['host_name']%></li>
+			<% end %>
+			</ul>
+		<% else %>
+			<p> No hosts have notifications disabled. </p>
+		<% end %>
+		
+		<% unless @services.empty? %>
+			<p>The following services have notifications disabled:</p>
+	    	<% @services.sort_by {|a| a['host_name']} .chunk {|a| a['host_name']} .each do |host, services| %>
+				<h2><%= host %></h2>
+				<ul>
+				<% services.sort_by {|a| a['service_description']} .each do |service|%>
+					<li><%= service['service_description']%></li>
+				<% end %>
+				</ul>
+			<% end %>
+		<% else %>
+			<p> No services have notifications disabled </p>
+		<% end %>
+  </body>
+</html>
