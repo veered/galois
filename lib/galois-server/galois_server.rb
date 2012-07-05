@@ -1,23 +1,34 @@
 require 'rack'
-require 'rack_monkey'
+require 'galois-server/rack_monkey'
 require 'sinatra/base'
 require 'redis'
+require 'redis-namespace'
+require 'json'
+require 'v8'
+
+require 'ruby-debug'
+require 'pry'
 
 module GaloisServer
   class HTTPConnection < Sinatra::Base
+    rd = Redis::Namespace.new(:galois, :redis => Redis.current)
+    cxt = V8::Context.new
     
-    get '/hosts' do
-      Redis.current.smembers("galois:hosts")
-    end
+    get /\/([^\/]*)/ do begin
+      params[:filter] ||= "true"
+      entity_name = params["captures"].first
     
-    get '/increment' do
-      Redis.current.set("counter", Redis.current.get("counter").to_i + 1)
-      Redis.current.get("counter")
-    end
-    
-    get '/print' do
-      Redis.current.get("counter")
-    end
+      collection = []
+      rd.hget("entities", entity_name).to_i.times do |index|
+        cxt['fields'] = fields = rd.hgetall("#{entity_name}::#{index}")
+        collection << fields if cxt.eval(params[:filter])
+      end
+      
+      collection.to_json
+      
+    rescue V8::JSError
+      "Invalid filter:\n#{$!}"
+    end end
     
   end
 end
@@ -25,14 +36,14 @@ end
 module GaloisServer
   extend self
   
-  def start(options = {})
+  def start(config = {})
     @app = Rack::Builder.new {
       use Rack::Lint
       use Rack::ShowExceptions
       run Rack::Cascade.new([GaloisServer::HTTPConnection])
     }.to_app
     
-    Rack::Handler::Unicorn.run(@app, options)
+    Rack::Handler::Unicorn.run(@app, config)
   end
   
 end
