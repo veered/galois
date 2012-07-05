@@ -16,9 +16,13 @@ group :development do
   gem "jeweler", "~> 1.8.3"
   gem (RUBY_VERSION =~ /^1\.9/ ? "simplecov" : "rcov"), ">= 0"
   
-  # Web Libraries
-  gem "rack", "~> 1.4.1"
-  gem "sinatra", "~> 1.3.2"
-  gem "unicorn", "~> 4.3.1"
-  gem "redis", "~> 3.0.1"
+  # Galois Specific
+  gem "rack"
+  gem "sinatra"
+  gem "unicorn"
+  gem "redis"
+  gem "redis-namespace"
+  gem "eventmachine"
+  gem "therubyracer", :require  => 'v8'
+  gem "actionmailer"
 end
