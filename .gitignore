@@ -47,3 +47,6 @@ tmtags
 
 # For rubinius:
 #*.rbc
+
+icinga.cfg
+status.dat
