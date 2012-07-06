@@ -3,7 +3,6 @@ require 'redis-namespace'
 require 'eventmachine'
 require 'json'
 require 'logger'
-require 'pry'
 
 class GaloisScraper
   attr_accessor :config, :logger, :redis, :icinga_status, :prd
@@ -29,6 +28,7 @@ class GaloisScraper
   end
   
   def start
+    parse
     EM.run { EM.add_periodic_timer(@config[:refresh]) {parse} }
   end
   

@@ -4,20 +4,12 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'galois'
 require 'logger'
+require 'json'
 
-smtp_settings = {
-  :address  => "smtp.gmail.com",
-  :port  => 587,
-  :domain  => "gmail.com",
-  :user_name  => "galois.emailer@gmail.com",
-  :password  => "nessness",
-  :authentication  => "plain",
-  :enable_starttls_auto  => true
-}
+conf_dir = ARGV[0] || "."
+config = JSON.parse(File.open(conf_dir + "/galois.config").read, :symbolize_names  => true)
 
-GaloisEmailer.new({
-  :smtp_settings  => smtp_settings, 
-  :time  => Time.now+5, 
-  :server  => "http://192.168.147.10:8124",
-  :subscribers  => ["lucashansen@gmail.com"] # ["ops-team@likeness.com"]
-  }, Logger.new(STDOUT)).start
+time = config[:emailer][:time].split(":").map(&:to_i)
+config[:emailer][:time] = time.first*60*60 + time.second*60 + time.third
+
+GaloisEmailer.new(config[:emailer], Logger.new(config[:log_dir] + "/emailer.log")).start

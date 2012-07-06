@@ -2,15 +2,12 @@
 
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
-require 'logger'
 require 'galois'
+require 'logger'
+require 'json'
 
-`redis-server`
-GaloisScraper.new({
-      :icinga_config  => "/galois/icinga.cfg", 
-      :prd  => "/galois/production-machines",
-      :refresh  => 10, 
-      :host_fields => ["host_name", "notifications_enabled"],
-      :service_fields  => ["host_name","service_description","notifications_enabled"]
-}, Logger.new(STDOUT)).start
+conf_dir = ARGV[0] || "."
+config = JSON.parse(File.open(conf_dir + "/galois.config").read, :symbolize_names  => true)
 
+GaloisScraper.new({ :prd  => conf_dir + "/production-machines" }.merge(config[:scraper]), 
+                  Logger.new(config[:log_dir] + "/scraper.log")).start

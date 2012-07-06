@@ -20,12 +20,12 @@ class GaloisEmailer
   
   def start
     EM.run {
-      time = @config[:time] - Time.now
-      time += 15 if time < 0
+      time = @config[:time] - (Time.now.hour*60*60 + Time.now.min*60 + Time.now.sec)
+      time += 86000 if time < 0
       
       run_me = proc {
         notify
-        EM.add_timer(15, run_me)
+        EM.add_timer(86000, run_me)
       }
       
       EM.add_timer(time, run_me)
@@ -56,7 +56,7 @@ class GaloisEmailer
     JSON.parse(result.body)
     
   rescue
-    @logger.error("Unable to retrieve entity:\n$!")
+    @logger.error("Unable to retrieve entity:\n#{$!}")
     []
   end
   

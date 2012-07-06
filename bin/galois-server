@@ -3,6 +3,9 @@
 $LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
 
 require 'galois'
+require 'json'
 
-`redis-server`
-GaloisServer.start({:Host => "192.168.147.10", :Port  => 8124})
+conf_dir = ARGV[0] || "."
+config = JSON.parse(File.open(conf_dir + "/galois.config").read, :symbolize_names  => true)
+
+GaloisServer.start({:Host  => config[:server][:host], :Port  => config[:server][:port]})

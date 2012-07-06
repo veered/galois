@@ -6,9 +6,6 @@ require 'redis-namespace'
 require 'json'
 require 'v8'
 
-require 'ruby-debug'
-require 'pry'
-
 module GaloisServer
   class HTTPConnection < Sinatra::Base
     rd = Redis::Namespace.new(:galois, :redis => Redis.current)
