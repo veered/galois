@@ -24,7 +24,7 @@ module GaloisServer
       collection.to_json
       
     rescue V8::JSError
-      { :error => "Invalid filter:\n#{$!}" }.to_json }
+      { :error => "Invalid filter:\n#{$!}" } }.to_json
     end end
     
   end
