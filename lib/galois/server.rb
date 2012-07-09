@@ -1,5 +1,5 @@
 require 'rack'
-require 'galois-server/rack_monkey'
+require 'rack_monkey'
 require 'sinatra/base'
 require 'redis'
 require 'redis-namespace'
