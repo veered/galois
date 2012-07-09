@@ -7,5 +7,6 @@ require 'json'
 
 conf_dir = ARGV[0] || "."
 config = JSON.parse(File.open(conf_dir + "/galois.config").read, :symbolize_names  => true)
+config[:conf_dir] = conf_dir
 
 GaloisServer.start({:Host  => config[:server][:host], :Port  => config[:server][:port]})
