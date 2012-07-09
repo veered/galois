@@ -33,16 +33,10 @@ class GaloisEmailer
   end
   
   class Notifier < ActionMailer::Base
-    def deploy_notification(sender, recipient, hosts, services)
-      @hosts = hosts
-      @services = services
-      mail(
-        :from  => sender,
-        :to  => recipient,
-        :subject  => "Icinga Services w/ Disabled Notifications",
-        :template_path  => '',
-        :template_name  => 'notification'
-      )
+    def deploy_notification(config = {})
+      @hosts = config[:hosts]
+      @services = config[:services]
+      mail(config[:mail])
     end
   end
   
@@ -65,8 +59,19 @@ class GaloisEmailer
     services = get_entity("servicestatus")
     
     unless hosts.empty? and services.empty?
-      @config[:subscribers].each do
-        email = Notifier.deploy_notification(@config[:smtp_settings][:user_name], "lucashansen@gmail.com", hosts, services)
+      @config[:subscribers].each do |subscriber|
+        email = Notifier.deploy_notification({
+          :hosts   => hosts,
+          :services  => services,
+          :email  => {
+            :from  => @config[:smtp_settings][:user_name],
+            :to  => subscriber,
+            :subject  => @config[:subject],
+            :template_path  => @config[:conf_dir],
+            :template_name  => @config[:template]
+          }
+        })
+
         email.deliver
       end
     else
