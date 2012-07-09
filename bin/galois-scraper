@@ -8,6 +8,7 @@ require 'json'
 
 conf_dir = ARGV[0] || "."
 config = JSON.parse(File.open(conf_dir + "/galois.config").read, :symbolize_names  => true)
+config[:conf_dir] = conf_dir
 
 GaloisScraper.new({ :prd  => conf_dir + "/production-machines" }.merge(config[:scraper]), 
                   Logger.new(config[:log_dir] + "/scraper.log")).start
