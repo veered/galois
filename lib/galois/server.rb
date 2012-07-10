@@ -1,5 +1,5 @@
 require 'rack'
-require 'rack_monkey'
+require 'galois/rack_monkey'
 require 'sinatra/base'
 require 'redis'
 require 'redis-namespace'
@@ -24,7 +24,7 @@ module GaloisServer
       collection.to_json
       
     rescue V8::JSError
-      { :error => "Invalid filter:\n#{$!}" } }.to_json
+      { :error => "Invalid filter:\n#{$!}" }.to_json
     end end
     
   end
