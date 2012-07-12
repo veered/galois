@@ -6,6 +6,7 @@ require 'redis-namespace'
 require 'json'
 require 'v8'
 
+# Exposes the Icinga information scraped by galois-scraper as a REST interface.
 module GaloisServer
   class HTTPConnection < Sinatra::Base
     rd = Redis::Namespace.new(:galois, :redis => Redis.current)
