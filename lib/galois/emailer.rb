@@ -50,7 +50,7 @@ class GaloisEmailer
     def deploy_notification(config = {})
       @hosts = config[:hosts]
       @services = config[:services]
-      mail(config[:mail])
+      mail(config[:email])
     end
   end
   
