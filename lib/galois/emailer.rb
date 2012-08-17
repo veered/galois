@@ -26,8 +26,6 @@ class GaloisEmailer
     ActionMailer::Base.raise_delivery_errors = true
     ActionMailer::Base.delivery_method = :smtp
     ActionMailer::Base.smtp_settings = @config[:smtp_settings]
-    
-    ActionMailer::Base.view_paths = File.dirname(__FILE__)
   end
 
   # Sends an email at config[:time] every day
@@ -47,13 +45,23 @@ class GaloisEmailer
   
   class Notifier < ActionMailer::Base
     # Sends out the notification
-    def deploy_notification(config = {})
-      @hosts = config[:hosts]
-      @services = config[:services]
-      mail(config[:email])
+    def send_notification(options = {})
+      @hosts = options[:hosts]
+      @services = options[:services]
+
+      template = File.read(options[:template])
+      body = ERB.new(template).result(binding)
+
+      mail({
+        from: options[:from],
+        to: options[:to],
+        subject: options[:subject],
+        body: body,
+        content_type: 'text/html'
+      })
     end
   end
-  
+
   # Queries the server for entities which pass the filter
   def get_entity(entity_name)
     uri = URI(@config[:server] + "/#{entity_name}")
@@ -76,19 +84,15 @@ class GaloisEmailer
     
     unless hosts.empty? and services.empty?
       @config[:subscribers].each do |subscriber|
-        email = Notifier.deploy_notification({
+        Notifier.send_notification({
           :hosts   => hosts,
           :services  => services,
-          :email  => {
-            :from  => @config[:smtp_settings][:user_name],
-            :to  => subscriber,
-            :subject  => @config[:subject],
-            :template_path  => @config[:conf_dir],
-            :template_name  => @config[:template]
-          }
-        })
 
-        email.deliver
+          :from  => @config[:smtp_settings][:user_name],
+          :to  => subscriber,
+          :subject  => @config[:subject],
+          template: "#{@config[:conf_dir]}/notification.html.erb"
+        }).deliver
       end
     else
       @logger.info("No hosts or services were found.")
